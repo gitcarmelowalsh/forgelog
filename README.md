@@ -1,4 +1,4 @@
-# forgelog
+# workouttracker
 My Workout Tracker
 Leveraging Claude, I created an html workout tracker that I can track on my phone.
 In summary it tracks the following and builds a dashboard for me to review my consistency and % complete
