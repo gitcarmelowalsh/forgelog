@@ -3,26 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Forge Log</title>
+<title>Carmelo's Workout Tracker</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   :root{
     --bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;
-    --text:#f0ede8;--muted:#888;--accent:#e8a44a;--accent2:#c25e3e;
-    --green:#4caf7d;--red:#e05252;--blue:#5b9bd5;
+    --text:#f0ede8;--muted:#888;
+    --accent:#7fff00;--accent2:#50c878;--accent3:#006b3c;
+    --green:#50c878;--red:#e05252;--blue:#5b9bd5;
   }
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
   h1,h2,.num{font-family:'Bebas Neue',sans-serif;letter-spacing:0.05em}
 
   /* PIN SCREEN */
   #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:2rem}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.1em;color:var(--accent)}
-  .logo span{color:var(--accent2)}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:2.3rem;letter-spacing:0.08em;text-align:center;line-height:1.2}
+  .logo .line1{color:#7fff00;display:block}
+  .logo .line2{color:#50c878;display:block}
+  .logo .line3{color:#006b3c;display:block;font-size:1.7rem}
   .pin-subtitle{color:var(--muted);font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase}
   .pin-display{display:flex;gap:12px;margin:1rem 0}
-  .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--accent);transition:background 0.2s}
-  .pin-dot.filled{background:var(--accent)}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid #7fff00;transition:background 0.2s}
+  .pin-dot.filled{background:#7fff00}
   .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:240px}
   .pin-key{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:1.1rem;font-size:1.3rem;font-weight:500;cursor:pointer;transition:background 0.15s,transform 0.1s;text-align:center;color:var(--text)}
   .pin-key:active{background:var(--surface2);transform:scale(0.95)}
@@ -37,7 +40,7 @@
   /* NAV */
   .nav{display:flex;border-bottom:0.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}
   .nav-tab{flex:1;padding:1rem 0.5rem;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:center;transition:color 0.2s;border-bottom:2px solid transparent;margin-bottom:-1px}
-  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .nav-tab.active{color:#7fff00;border-bottom-color:#7fff00}
 
   /* PAGES */
   .page{display:none;padding:1.5rem 1rem 5rem;flex-direction:column;gap:1.25rem}
@@ -58,17 +61,19 @@
   .week-day{display:flex;flex-direction:column;align-items:center;gap:4px}
   .week-day-label{font-size:0.6rem;color:var(--muted);text-transform:uppercase}
   .week-day-bubble{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center}
-  .week-day-bubble.done{background:var(--green);border-color:var(--green)}
-  .week-day-bubble.today{border-color:var(--accent);border-width:1.5px}
+  .week-day-bubble.done{background:#50c878;border-color:#50c878}
+  .week-day-bubble.today{border-color:#7fff00;border-width:1.5px}
   .week-day-bubble.rest{opacity:0.4}
-  .check-svg{width:14px;height:14px;stroke:#0a2e1a;stroke-width:2.5;fill:none}
+  .check-svg{width:14px;height:14px;stroke:#012010;stroke-width:2.5;fill:none}
   .section-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--muted);letter-spacing:0.06em}
   .history-row{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:var(--surface);border:0.5px solid var(--border);border-radius:10px}
   .history-date{font-size:0.8rem;color:var(--muted)}
   .history-name{font-size:0.9rem;font-weight:500}
   .history-badge{font-size:0.68rem;padding:3px 8px;border-radius:20px;font-weight:500}
-  .badge-done{background:#1a3a28;color:var(--green)}
+  .badge-done{background:#0a2e18;color:#50c878}
   .badge-skip{background:#2a1a1a;color:var(--red)}
+  .stat-value.accent{color:#7fff00}
+  .stat-value.green{color:#50c878}
 
   /* LOG PAGE */
   .day-header{display:flex;flex-direction:column;gap:4px}
@@ -80,7 +85,7 @@
   .exercise-row{padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
   .exercise-row:last-child{border-bottom:none}
   .exercise-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.15s,border-color 0.15s}
-  .exercise-check.checked{background:var(--green);border-color:var(--green)}
+  .exercise-check.checked{background:#50c878;border-color:#50c878}
   .exercise-check svg{display:none}
   .exercise-check.checked svg{display:block}
   .exercise-info{flex:1}
@@ -94,7 +99,7 @@
   .run-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .run-field label{font-size:0.72rem;color:var(--muted);display:block;margin-bottom:4px}
   .run-field input{width:100%;font-size:0.9rem;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text)}
-  .complete-btn{width:100%;padding:1rem;border-radius:14px;border:none;background:var(--accent);color:#1a0e00;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s,transform 0.1s}
+  .complete-btn{width:100%;padding:1rem;border-radius:14px;border:none;background:#50c878;color:#012010;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s,transform 0.1s}
   .complete-btn:active{transform:scale(0.98);opacity:0.9}
   .complete-btn.secondary{background:var(--surface);color:var(--muted);border:0.5px solid var(--border);font-size:1.1rem}
   .rest-day-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:2rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.75rem}
@@ -104,9 +109,9 @@
   .day-selector{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
   .day-selector::-webkit-scrollbar{display:none}
   .day-pill{padding:6px 14px;border-radius:20px;font-size:0.75rem;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;transition:all 0.15s;font-weight:500}
-  .day-pill.active{background:var(--accent);border-color:var(--accent);color:#1a0e00}
+  .day-pill.active{background:#7fff00;border-color:#7fff00;color:#012010}
   .day-pill.logged{border-color:var(--green);color:var(--green)}
-  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#0a2e1a;padding:0.6rem 1.4rem;border-radius:30px;font-size:0.85rem;font-weight:500;opacity:0;transition:all 0.3s;z-index:100;pointer-events:none}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#50c878;color:#012010;padding:0.6rem 1.4rem;border-radius:30px;font-size:0.85rem;font-weight:500;opacity:0;transition:all 0.3s;z-index:100;pointer-events:none}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -114,7 +119,7 @@
 
 <!-- PIN SCREEN -->
 <div id="pin-screen">
-  <div class="logo">Forge<span>Log</span></div>
+  <div class="logo"><span class="line1">Carmelo's</span><span class="line2">Workout</span><span class="line3">Tracker</span></div>
   <div class="pin-subtitle" id="pin-label">Enter PIN</div>
   <div class="pin-display" id="pin-dots"></div>
   <div class="pin-pad">
@@ -138,8 +143,9 @@
 <div id="app">
   <div class="nav">
     <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
-    <div class="nav-tab" onclick="showPage('log')">Log Workout</div>
+    <div class="nav-tab" onclick="showPage('log')">Log</div>
     <div class="nav-tab" onclick="showPage('history')">History</div>
+    <div class="nav-tab" onclick="showPage('settings')">Settings</div>
   </div>
 
   <!-- DASHBOARD -->
@@ -191,6 +197,44 @@
   </div>
 </div>
 
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="dash-header">
+      <div class="dash-title">SETTINGS</div>
+    </div>
+
+    <div class="workout-section">
+      <div class="workout-section-header"><span class="workout-section-title">Data &amp; Backup</span></div>
+      <div style="padding:1.1rem;display:flex;flex-direction:column;gap:0.75rem">
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">Export saves all your workout logs, weights, run times, and streaks to a JSON file. Keep it somewhere safe — you can import it anytime to restore your data.</div>
+        <button class="complete-btn" style="font-size:1.1rem" onclick="exportData()">Export my data</button>
+      </div>
+    </div>
+
+    <div class="workout-section">
+      <div class="workout-section-header"><span class="workout-section-title">Import Data</span></div>
+      <div style="padding:1.1rem;display:flex;flex-direction:column;gap:0.75rem">
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">Import a previously exported JSON file to restore your data. This will merge with your existing data — nothing gets deleted.</div>
+        <label style="width:100%;padding:0.85rem;border-radius:14px;border:0.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.9rem;text-align:center;cursor:pointer;display:block">
+          Choose backup file
+          <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+        </label>
+        <div id="import-status" style="font-size:0.8rem;color:var(--green);text-align:center;min-height:1.2em"></div>
+      </div>
+    </div>
+
+    <div class="workout-section">
+      <div class="workout-section-header"><span class="workout-section-title">PIN</span></div>
+      <div style="padding:1.1rem;display:flex;flex-direction:column;gap:0.75rem">
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">Reset your PIN. You will be logged out and asked to set a new one on next visit.</div>
+        <button class="complete-btn secondary" style="font-size:0.95rem" onclick="resetPin()">Reset PIN</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:0.72rem;color:var(--border);padding-top:1rem">Carmelo's Workout Tracker &mdash; all data stored locally on this device</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -211,7 +255,9 @@ const EXERCISES = {
       {name:'Pull-ups / Lat pulldown',sets:'4 x 6-10 reps'},
       {name:'Overhead press',sets:'3 x 8-10 reps'},
       {name:'DB row / Cable row',sets:'3 x 8-10 reps'},
-      {name:'Accessory (curls / dips / laterals)',sets:'3 x 10-12 reps'},
+      {name:'Biceps curls',sets:'3 x 10-12 reps'},
+      {name:'Triceps dips',sets:'3 x 10-12 reps'},
+      {name:'Lateral raises',sets:'3 x 10-12 reps'},
     ]},
     {section:'2-Mile Run', isRun:true}
   ],
@@ -224,7 +270,8 @@ const EXERCISES = {
     ]},
     {section:'Core', items:[
       {name:'Plank',sets:'3 x 30-45 sec'},
-      {name:'Hanging leg raises / Cable crunch',sets:'3 x 10-15 reps'},
+      {name:'Hanging leg raises',sets:'3 x 10-15 reps'},
+      {name:'Cable crunch',sets:'3 x 10-15 reps'},
     ]}
   ],
   Wed: [
@@ -233,7 +280,9 @@ const EXERCISES = {
       {name:'Pull-ups / Lat pulldown',sets:'4 x 6-10 reps'},
       {name:'Overhead press',sets:'3 x 8-10 reps'},
       {name:'DB row / Cable row',sets:'3 x 8-10 reps'},
-      {name:'Accessory (curls / dips / laterals)',sets:'3 x 10-12 reps'},
+      {name:'Biceps curls',sets:'3 x 10-12 reps'},
+      {name:'Triceps dips',sets:'3 x 10-12 reps'},
+      {name:'Lateral raises',sets:'3 x 10-12 reps'},
     ]},
     {section:'2-Mile Run', isRun:true}
   ],
@@ -246,10 +295,13 @@ const EXERCISES = {
     ]},
     {section:'Core', items:[
       {name:'Plank',sets:'3 x 30-45 sec'},
-      {name:'Hanging leg raises / Cable crunch',sets:'3 x 10-15 reps'},
+      {name:'Hanging leg raises',sets:'3 x 10-15 reps'},
+      {name:'Cable crunch',sets:'3 x 10-15 reps'},
     ]},
     {section:'Conditioning (10-15 min)', items:[
-      {name:'Rower / Bike / Battle ropes',sets:'30s hard / 60s easy intervals'},
+      {name:'Rower',sets:'30s hard / 60s easy intervals'},
+      {name:'Bike',sets:'30s hard / 60s easy intervals'},
+      {name:'Battle ropes',sets:'30s hard / 60s easy intervals'},
     ]}
   ],
   Fri: [
@@ -378,11 +430,65 @@ function showPage(name){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   const tabs = document.querySelectorAll('.nav-tab');
-  const idx = ['dashboard','log','history'].indexOf(name);
-  tabs[idx].classList.add('active');
+  const idx = ['dashboard','log','history','settings'].indexOf(name);
+  if(idx >= 0) tabs[idx].classList.add('active');
   if(name==='dashboard') renderDashboard();
   if(name==='history') renderHistory();
   if(name==='log') renderLogPage();
+}
+
+function exportData(){
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    state: state,
+    bestStreak: localStorage.getItem('forgelog_best')||'0'
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'forgelog-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Data exported!');
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const payload = JSON.parse(e.target.result);
+      if(!payload.state) throw new Error('Invalid file');
+      const imported = payload.state;
+      state.logs = Object.assign({}, imported.logs||{}, state.logs);
+      state.checked = Object.assign({}, imported.checked||{}, state.checked);
+      state.weights = Object.assign({}, imported.weights||{}, state.weights);
+      state.runData = Object.assign({}, imported.runData||{}, state.runData);
+      if(payload.bestStreak){
+        const cur = parseInt(localStorage.getItem('forgelog_best')||'0');
+        const imp = parseInt(payload.bestStreak);
+        if(imp > cur) localStorage.setItem('forgelog_best', imp);
+      }
+      saveState();
+      renderDashboard();
+      document.getElementById('import-status').textContent = 'Import successful! Your data has been restored.';
+      showToast('Data imported!');
+    } catch(err){
+      document.getElementById('import-status').style.color = 'var(--red)';
+      document.getElementById('import-status').textContent = 'Invalid file. Please use a ForgeLog backup.';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetPin(){
+  if(confirm('Reset your PIN? You will be logged out.')){
+    localStorage.removeItem('forgelog_pin');
+    location.reload();
+  }
 }
 
 function renderDashboard(){
@@ -441,7 +547,7 @@ function renderDashboard(){
     const pip = document.createElement('div');
     pip.style.cssText = 'width:28px;height:28px;border-radius:6px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:var(--muted);text-transform:uppercase;';
     if(sched.type==='rest'){ pip.style.background='var(--surface)'; pip.style.opacity='0.4'; pip.textContent='R'; }
-    else if(done){ pip.style.background='var(--green)'; pip.style.borderColor='var(--green)'; pip.innerHTML='<svg style="width:12px;height:12px;stroke:#0a2e1a;stroke-width:2.5;fill:none" viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>'; }
+    else if(done){ pip.style.background='#50c878'; pip.style.borderColor='#50c878'; pip.innerHTML='<svg style="width:12px;height:12px;stroke:#012010;stroke-width:2.5;fill:none" viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>'; }
     else{ pip.style.background='var(--surface2)'; }
     hm.appendChild(pip);
   }
@@ -508,7 +614,7 @@ function renderLogPage(){
         row.className = 'exercise-row';
         const checked = state.checked[exKey];
         row.innerHTML = '<div class="exercise-check '+(checked?'checked':'')+'" onclick="toggleCheck(\''+exKey+'\',this)">'
-          + '<svg viewBox="0 0 14 14" style="width:12px;height:12px;stroke:#0a2e1a;stroke-width:2.5;fill:none"><polyline points="2,7 6,11 12,3"/></svg>'
+          + '<svg viewBox="0 0 14 14" style="width:12px;height:12px;stroke:#012010;stroke-width:2.5;fill:none"><polyline points="2,7 6,11 12,3"/></svg>'
           + '</div>'
           + '<div class="exercise-info"><div class="exercise-name">'+ex.name+'</div><div class="exercise-sets">'+ex.sets+'</div></div>'
           + '<input class="weight-input" type="text" placeholder="lbs" value="'+(state.weights[exKey]||'')+'" oninput="saveWeight(\''+exKey+'\',this.value)" title="Weight used">';
