@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Forge Log</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;
+    --text:#f0ede8;--muted:#888;--accent:#e8a44a;--accent2:#c25e3e;
+    --green:#4caf7d;--red:#e05252;--blue:#5b9bd5;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  h1,h2,.num{font-family:'Bebas Neue',sans-serif;letter-spacing:0.05em}
+
+  /* PIN SCREEN */
+  #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:2rem}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:0.1em;color:var(--accent)}
+  .logo span{color:var(--accent2)}
+  .pin-subtitle{color:var(--muted);font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase}
+  .pin-display{display:flex;gap:12px;margin:1rem 0}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--accent);transition:background 0.2s}
+  .pin-dot.filled{background:var(--accent)}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:240px}
+  .pin-key{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:1.1rem;font-size:1.3rem;font-weight:500;cursor:pointer;transition:background 0.15s,transform 0.1s;text-align:center;color:var(--text)}
+  .pin-key:active{background:var(--surface2);transform:scale(0.95)}
+  .pin-key.del{font-size:1rem;color:var(--muted)}
+  .pin-key.zero{grid-column:2}
+  .pin-error{color:var(--red);font-size:0.82rem;height:1.2em;transition:opacity 0.3s}
+  .pin-setup-note{color:var(--muted);font-size:0.78rem;text-align:center;max-width:220px;line-height:1.5}
+
+  /* MAIN APP */
+  #app{display:none;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto}
+
+  /* NAV */
+  .nav{display:flex;border-bottom:0.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}
+  .nav-tab{flex:1;padding:1rem 0.5rem;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:center;transition:color 0.2s;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+  /* PAGES */
+  .page{display:none;padding:1.5rem 1rem 5rem;flex-direction:column;gap:1.25rem}
+  .page.active{display:flex}
+
+  /* DASHBOARD */
+  .dash-header{display:flex;flex-direction:column;gap:4px}
+  .dash-greeting{font-size:0.8rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase}
+  .dash-title{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--text);letter-spacing:0.05em}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:1rem 1.1rem}
+  .stat-label{font-size:0.7rem;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px}
+  .stat-value{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;line-height:1;color:var(--text)}
+  .stat-value.accent{color:var(--accent)}
+  .stat-value.green{color:var(--green)}
+  .stat-sub{font-size:0.72rem;color:var(--muted);margin-top:3px}
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .week-day{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .week-day-label{font-size:0.6rem;color:var(--muted);text-transform:uppercase}
+  .week-day-bubble{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center}
+  .week-day-bubble.done{background:var(--green);border-color:var(--green)}
+  .week-day-bubble.today{border-color:var(--accent);border-width:1.5px}
+  .week-day-bubble.rest{opacity:0.4}
+  .check-svg{width:14px;height:14px;stroke:#0a2e1a;stroke-width:2.5;fill:none}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--muted);letter-spacing:0.06em}
+  .history-row{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:var(--surface);border:0.5px solid var(--border);border-radius:10px}
+  .history-date{font-size:0.8rem;color:var(--muted)}
+  .history-name{font-size:0.9rem;font-weight:500}
+  .history-badge{font-size:0.68rem;padding:3px 8px;border-radius:20px;font-weight:500}
+  .badge-done{background:#1a3a28;color:var(--green)}
+  .badge-skip{background:#2a1a1a;color:var(--red)}
+
+  /* LOG PAGE */
+  .day-header{display:flex;flex-direction:column;gap:4px}
+  .day-name{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:0.05em}
+  .day-desc{font-size:0.8rem;color:var(--muted)}
+  .workout-section{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;overflow:hidden}
+  .workout-section-header{padding:0.9rem 1rem;background:var(--surface2);display:flex;align-items:center;gap:8px;border-bottom:0.5px solid var(--border)}
+  .workout-section-title{font-size:0.82rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase}
+  .exercise-row{padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+  .exercise-row:last-child{border-bottom:none}
+  .exercise-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.15s,border-color 0.15s}
+  .exercise-check.checked{background:var(--green);border-color:var(--green)}
+  .exercise-check svg{display:none}
+  .exercise-check.checked svg{display:block}
+  .exercise-info{flex:1}
+  .exercise-name{font-size:0.9rem;font-weight:500}
+  .exercise-sets{font-size:0.75rem;color:var(--muted);margin-top:1px}
+  .weight-input{width:70px;font-size:0.82rem;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--text);text-align:center}
+  .weight-input::placeholder{color:var(--border)}
+  .run-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:1.1rem}
+  .run-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem}
+  .run-card-title{font-size:0.82rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase}
+  .run-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .run-field label{font-size:0.72rem;color:var(--muted);display:block;margin-bottom:4px}
+  .run-field input{width:100%;font-size:0.9rem;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text)}
+  .complete-btn{width:100%;padding:1rem;border-radius:14px;border:none;background:var(--accent);color:#1a0e00;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s,transform 0.1s}
+  .complete-btn:active{transform:scale(0.98);opacity:0.9}
+  .complete-btn.secondary{background:var(--surface);color:var(--muted);border:0.5px solid var(--border);font-size:1.1rem}
+  .rest-day-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:2rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.75rem}
+  .rest-icon{font-size:2.5rem}
+  .rest-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--muted)}
+  .rest-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;max-width:260px}
+  .day-selector{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .day-selector::-webkit-scrollbar{display:none}
+  .day-pill{padding:6px 14px;border-radius:20px;font-size:0.75rem;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;transition:all 0.15s;font-weight:500}
+  .day-pill.active{background:var(--accent);border-color:var(--accent);color:#1a0e00}
+  .day-pill.logged{border-color:var(--green);color:var(--green)}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#0a2e1a;padding:0.6rem 1.4rem;border-radius:30px;font-size:0.85rem;font-weight:500;opacity:0;transition:all 0.3s;z-index:100;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="logo">Forge<span>Log</span></div>
+  <div class="pin-subtitle" id="pin-label">Enter PIN</div>
+  <div class="pin-display" id="pin-dots"></div>
+  <div class="pin-pad">
+    <div class="pin-key" onclick="pinKey(1)">1</div>
+    <div class="pin-key" onclick="pinKey(2)">2</div>
+    <div class="pin-key" onclick="pinKey(3)">3</div>
+    <div class="pin-key" onclick="pinKey(4)">4</div>
+    <div class="pin-key" onclick="pinKey(5)">5</div>
+    <div class="pin-key" onclick="pinKey(6)">6</div>
+    <div class="pin-key" onclick="pinKey(7)">7</div>
+    <div class="pin-key" onclick="pinKey(8)">8</div>
+    <div class="pin-key" onclick="pinKey(9)">9</div>
+    <div class="pin-key zero" onclick="pinKey(0)">0</div>
+    <div class="pin-key del" onclick="pinDel()">&#9003;</div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-setup-note" id="pin-setup-note"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="nav">
+    <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="nav-tab" onclick="showPage('log')">Log Workout</div>
+    <div class="nav-tab" onclick="showPage('history')">History</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="dash-header">
+      <div class="dash-greeting">Your progress</div>
+      <div class="dash-title">WEEK OVERVIEW</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Current streak</div>
+        <div class="stat-value accent" id="dash-streak">0</div>
+        <div class="stat-sub">days in a row</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This week</div>
+        <div class="stat-value green" id="dash-week-pct">0%</div>
+        <div class="stat-sub" id="dash-week-sub">0 of 6 workouts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total logged</div>
+        <div class="stat-value" id="dash-total">0</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Best streak</div>
+        <div class="stat-value" id="dash-best">0</div>
+        <div class="stat-sub">days</div>
+      </div>
+    </div>
+    <div class="section-title">This week</div>
+    <div class="week-grid" id="dash-week-grid"></div>
+    <div class="section-title">Last 14 days</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap" id="dash-heatmap"></div>
+  </div>
+
+  <!-- LOG PAGE -->
+  <div class="page" id="page-log">
+    <div class="day-selector" id="day-selector"></div>
+    <div id="workout-content"></div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+    <div class="dash-header">
+      <div class="dash-title">HISTORY</div>
+    </div>
+    <div id="history-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const SCHEDULE = {
+  Mon: {type:'workout', label:'Upper Body + Run'},
+  Tue: {type:'workout', label:'Lower Body + Core'},
+  Wed: {type:'workout', label:'Upper Body + Run'},
+  Thu: {type:'workout', label:'Lower Body + Conditioning'},
+  Fri: {type:'workout', label:'Full Body + Run'},
+  Sat: {type:'optional', label:'Fighting Skills (optional)'},
+  Sun: {type:'rest', label:'Rest & Recovery'}
+};
+const EXERCISES = {
+  Mon: [
+    {section:'Upper Body', items:[
+      {name:'Bench press / Dumbbell press',sets:'4 x 6-8 reps'},
+      {name:'Pull-ups / Lat pulldown',sets:'4 x 6-10 reps'},
+      {name:'Overhead press',sets:'3 x 8-10 reps'},
+      {name:'DB row / Cable row',sets:'3 x 8-10 reps'},
+      {name:'Accessory (curls / dips / laterals)',sets:'3 x 10-12 reps'},
+    ]},
+    {section:'2-Mile Run', isRun:true}
+  ],
+  Tue: [
+    {section:'Lower Body', items:[
+      {name:'Back squat / Leg press',sets:'4 x 6-8 reps'},
+      {name:'Romanian deadlift',sets:'3 x 8-10 reps'},
+      {name:'Walking lunges',sets:'3 x 10 steps each leg'},
+      {name:'Calf raises',sets:'3 x 12-15 reps'},
+    ]},
+    {section:'Core', items:[
+      {name:'Plank',sets:'3 x 30-45 sec'},
+      {name:'Hanging leg raises / Cable crunch',sets:'3 x 10-15 reps'},
+    ]}
+  ],
+  Wed: [
+    {section:'Upper Body', items:[
+      {name:'Bench press / Dumbbell press',sets:'4 x 6-8 reps'},
+      {name:'Pull-ups / Lat pulldown',sets:'4 x 6-10 reps'},
+      {name:'Overhead press',sets:'3 x 8-10 reps'},
+      {name:'DB row / Cable row',sets:'3 x 8-10 reps'},
+      {name:'Accessory (curls / dips / laterals)',sets:'3 x 10-12 reps'},
+    ]},
+    {section:'2-Mile Run', isRun:true}
+  ],
+  Thu: [
+    {section:'Lower Body', items:[
+      {name:'Back squat / Leg press',sets:'4 x 6-8 reps'},
+      {name:'Romanian deadlift',sets:'3 x 8-10 reps'},
+      {name:'Walking lunges',sets:'3 x 10 steps each leg'},
+      {name:'Calf raises',sets:'3 x 12-15 reps'},
+    ]},
+    {section:'Core', items:[
+      {name:'Plank',sets:'3 x 30-45 sec'},
+      {name:'Hanging leg raises / Cable crunch',sets:'3 x 10-15 reps'},
+    ]},
+    {section:'Conditioning (10-15 min)', items:[
+      {name:'Rower / Bike / Battle ropes',sets:'30s hard / 60s easy intervals'},
+    ]}
+  ],
+  Fri: [
+    {section:'Full Body', items:[
+      {name:'Deadlift / Trap-bar deadlift',sets:'4 x 5 reps'},
+      {name:'Incline dumbbell press',sets:'3 x 8 reps'},
+      {name:'Pull-ups / Rows',sets:'3 x 8-10 reps'},
+      {name:"Farmer's carry",sets:'3 x 30-40 seconds'},
+    ]},
+    {section:'2-Mile Run', isRun:true}
+  ],
+  Sat: [
+    {section:'Fighting Skills', items:[
+      {name:'Joint mobility (hips, shoulders, spine)',sets:'10 minutes'},
+      {name:'Stick/sword: swings, footwork, shadow sparring',sets:'15-20 minutes'},
+      {name:'Core finisher (Russian twists, Pallof press, side planks)',sets:'5-10 minutes'},
+    ]}
+  ],
+  Sun: []
+};
+
+let pinBuffer = '';
+let pinMode = 'check';
+let pendingPin = '';
+let state = {logs:{}, checked:{}, weights:{}, runData:{}, currentDay:null};
+
+function saveState(){localStorage.setItem('forgelog_state', JSON.stringify(state));}
+function loadState(){
+  const s = localStorage.getItem('forgelog_state');
+  if(s) state = JSON.parse(s);
+}
+function getPin(){return localStorage.getItem('forgelog_pin');}
+function setPin(p){localStorage.setItem('forgelog_pin', p);}
+
+function renderPinDots(){
+  const el = document.getElementById('pin-dots');
+  el.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const d = document.createElement('div');
+    d.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+    el.appendChild(d);
+  }
+}
+
+function pinKey(n){
+  if(pinBuffer.length >= 4) return;
+  pinBuffer += n;
+  renderPinDots();
+  if(pinBuffer.length === 4) setTimeout(submitPin, 120);
+}
+function pinDel(){
+  pinBuffer = pinBuffer.slice(0,-1);
+  renderPinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function submitPin(){
+  const stored = getPin();
+  if(!stored){
+    if(pinMode === 'check'){
+      pinMode = 'setup';
+      document.getElementById('pin-label').textContent = 'Create a PIN';
+      document.getElementById('pin-setup-note').textContent = 'Choose a 4-digit PIN to protect your data.';
+      pinBuffer = ''; renderPinDots(); return;
+    }
+    if(pinMode === 'setup'){
+      pendingPin = pinBuffer; pinMode = 'confirm';
+      document.getElementById('pin-label').textContent = 'Confirm PIN';
+      document.getElementById('pin-setup-note').textContent = '';
+      pinBuffer = ''; renderPinDots(); return;
+    }
+    if(pinMode === 'confirm'){
+      if(pinBuffer === pendingPin){ setPin(pinBuffer); unlockApp(); }
+      else{
+        document.getElementById('pin-error').textContent = "PINs don't match. Try again.";
+        pinMode = 'setup'; pendingPin = '';
+        document.getElementById('pin-label').textContent = 'Create a PIN';
+        pinBuffer = ''; renderPinDots();
+      }
+      return;
+    }
+  } else {
+    if(pinBuffer === stored){ unlockApp(); }
+    else{
+      document.getElementById('pin-error').textContent = 'Incorrect PIN';
+      pinBuffer = ''; renderPinDots();
+    }
+  }
+}
+
+function unlockApp(){
+  loadState();
+  document.getElementById('pin-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+  initApp();
+}
+
+function getTodayKey(){
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+function getDayName(){
+  const d = new Date();
+  return DAYS[d.getDay()===0?6:d.getDay()-1];
+}
+function getWeekStart(){
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate()-diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function initApp(){
+  state.currentDay = state.currentDay || getDayName();
+  renderDashboard();
+  renderLogPage();
+  renderHistory();
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const idx = ['dashboard','log','history'].indexOf(name);
+  tabs[idx].classList.add('active');
+  if(name==='dashboard') renderDashboard();
+  if(name==='history') renderHistory();
+  if(name==='log') renderLogPage();
+}
+
+function renderDashboard(){
+  const ws = getWeekStart();
+  let weekDone = 0, weekTotal = 0;
+  const grid = document.getElementById('dash-week-grid');
+  grid.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(ws); d.setDate(ws.getDate()+i);
+    const dk = d.toISOString().split('T')[0];
+    const dayName = DAYS[i];
+    const sched = SCHEDULE[dayName];
+    const isToday = dk === getTodayKey();
+    const done = state.logs[dk];
+    if(sched.type !== 'rest') weekTotal++;
+    if(done && sched.type !== 'rest') weekDone++;
+    const col = document.createElement('div');
+    col.className = 'week-day';
+    const lbl = document.createElement('div');
+    lbl.className = 'week-day-label'; lbl.textContent = dayName;
+    const bub = document.createElement('div');
+    bub.className = 'week-day-bubble' + (done?' done':'') + (isToday?' today':'') + (sched.type==='rest'?' rest':'');
+    if(done){ bub.innerHTML = '<svg class="check-svg" viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>'; }
+    col.appendChild(lbl); col.appendChild(bub);
+    grid.appendChild(col);
+  }
+  const pct = weekTotal > 0 ? Math.round(weekDone/weekTotal*100) : 0;
+  document.getElementById('dash-week-pct').textContent = pct + '%';
+  document.getElementById('dash-week-sub').textContent = weekDone + ' of ' + weekTotal + ' workouts';
+
+  let streak = 0;
+  let best = parseInt(localStorage.getItem('forgelog_best')||'0');
+  const check = new Date();
+  for(let i=0;i<365;i++){
+    check.setDate(check.getDate()-1);
+    const dk2 = check.toISOString().split('T')[0];
+    const dayIdx = check.getDay()===0?6:check.getDay()-1;
+    if(SCHEDULE[DAYS[dayIdx]].type === 'rest'){streak++;continue;}
+    if(state.logs[dk2]) streak++;
+    else break;
+  }
+  if(streak > best){ best = streak; localStorage.setItem('forgelog_best', best); }
+  document.getElementById('dash-streak').textContent = streak;
+  document.getElementById('dash-best').textContent = best;
+  const allDone = Object.keys(state.logs).filter(k=>state.logs[k]).length;
+  document.getElementById('dash-total').textContent = allDone;
+
+  const hm = document.getElementById('dash-heatmap');
+  hm.innerHTML = '';
+  for(let i=13;i>=0;i--){
+    const d2 = new Date(); d2.setDate(d2.getDate()-i);
+    const dk3 = d2.toISOString().split('T')[0];
+    const dayIdx = d2.getDay()===0?6:d2.getDay()-1;
+    const sched = SCHEDULE[DAYS[dayIdx]];
+    const done = state.logs[dk3];
+    const pip = document.createElement('div');
+    pip.style.cssText = 'width:28px;height:28px;border-radius:6px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:var(--muted);text-transform:uppercase;';
+    if(sched.type==='rest'){ pip.style.background='var(--surface)'; pip.style.opacity='0.4'; pip.textContent='R'; }
+    else if(done){ pip.style.background='var(--green)'; pip.style.borderColor='var(--green)'; pip.innerHTML='<svg style="width:12px;height:12px;stroke:#0a2e1a;stroke-width:2.5;fill:none" viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>'; }
+    else{ pip.style.background='var(--surface2)'; }
+    hm.appendChild(pip);
+  }
+}
+
+function renderDaySelector(){
+  const sel = document.getElementById('day-selector');
+  sel.innerHTML = '';
+  DAYS.forEach(d=>{
+    const p = document.createElement('div');
+    p.className = 'day-pill' + (d===state.currentDay?' active':'');
+    const wk = getWeekStart();
+    const idx = DAYS.indexOf(d);
+    const date = new Date(wk); date.setDate(wk.getDate()+idx);
+    const dk = date.toISOString().split('T')[0];
+    if(state.logs[dk] && d !== state.currentDay) p.classList.add('logged');
+    p.textContent = d;
+    p.onclick = ()=>{ state.currentDay = d; renderLogPage(); saveState(); };
+    sel.appendChild(p);
+  });
+}
+
+function renderLogPage(){
+  renderDaySelector();
+  const day = state.currentDay;
+  const sched = SCHEDULE[day];
+  const content = document.getElementById('workout-content');
+  content.innerHTML = '';
+
+  const wk = getWeekStart();
+  const idx = DAYS.indexOf(day);
+  const date = new Date(wk); date.setDate(wk.getDate()+idx);
+  const dk = date.toISOString().split('T')[0];
+
+  if(sched.type === 'rest'){
+    content.innerHTML = '<div class="rest-day-card"><div class="rest-icon">&#127769;</div><div class="rest-title">Rest Day</div><div class="rest-desc">Sunday is for recovery. Sleep, stretch, eat well. Come back stronger.</div></div>';
+    return;
+  }
+
+  const sections = EXERCISES[day] || [];
+  const container = document.createElement('div');
+  container.style.cssText = 'display:flex;flex-direction:column;gap:1rem';
+
+  sections.forEach((sec, si)=>{
+    if(sec.isRun){
+      const runCard = document.createElement('div');
+      runCard.className = 'run-card';
+      runCard.innerHTML = '<div class="run-card-header"><span class="run-card-title">2-Mile Run</span></div>'
+        + '<div class="run-inputs">'
+        + '<div class="run-field"><label>Time (mm:ss)</label><input type="text" placeholder="18:00" id="run-time-'+dk+'" value="'+((state.runData[dk]||{}).time||'')+'" oninput="saveRun(\''+dk+'\')"></div>'
+        + '<div class="run-field"><label>Feel (1-10)</label><input type="number" min="1" max="10" placeholder="7" id="run-feel-'+dk+'" value="'+((state.runData[dk]||{}).feel||'')+'" oninput="saveRun(\''+dk+'\')"></div>'
+        + '</div>';
+      container.appendChild(runCard);
+    } else {
+      const card = document.createElement('div');
+      card.className = 'workout-section';
+      const header = document.createElement('div');
+      header.className = 'workout-section-header';
+      header.innerHTML = '<span class="workout-section-title">'+sec.section+'</span>';
+      card.appendChild(header);
+      sec.items.forEach((ex, ei)=>{
+        const exKey = dk+'-'+si+'-'+ei;
+        const row = document.createElement('div');
+        row.className = 'exercise-row';
+        const checked = state.checked[exKey];
+        row.innerHTML = '<div class="exercise-check '+(checked?'checked':'')+'" onclick="toggleCheck(\''+exKey+'\',this)">'
+          + '<svg viewBox="0 0 14 14" style="width:12px;height:12px;stroke:#0a2e1a;stroke-width:2.5;fill:none"><polyline points="2,7 6,11 12,3"/></svg>'
+          + '</div>'
+          + '<div class="exercise-info"><div class="exercise-name">'+ex.name+'</div><div class="exercise-sets">'+ex.sets+'</div></div>'
+          + '<input class="weight-input" type="text" placeholder="lbs" value="'+(state.weights[exKey]||'')+'" oninput="saveWeight(\''+exKey+'\',this.value)" title="Weight used">';
+        card.appendChild(row);
+      });
+      container.appendChild(card);
+    }
+  });
+
+  const already = state.logs[dk];
+  const btnWrapper = document.createElement('div');
+  btnWrapper.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+  const btn = document.createElement('button');
+  btn.className = 'complete-btn' + (already?' secondary':'');
+  btn.textContent = already ? 'Workout logged \u2713' : 'Mark complete';
+  btn.onclick = ()=>{ toggleLog(dk, btn); };
+  btnWrapper.appendChild(btn);
+  container.appendChild(btnWrapper);
+  content.appendChild(container);
+}
+
+function toggleCheck(key, el){
+  state.checked[key] = !state.checked[key];
+  el.classList.toggle('checked', state.checked[key]);
+  saveState();
+}
+function saveWeight(key, val){ state.weights[key] = val; saveState(); }
+function saveRun(dk){
+  const t = document.getElementById('run-time-'+dk);
+  const f = document.getElementById('run-feel-'+dk);
+  state.runData[dk] = {time: t?t.value:'', feel: f?f.value:''};
+  saveState();
+}
+function toggleLog(dk, btn){
+  state.logs[dk] = !state.logs[dk];
+  btn.textContent = state.logs[dk] ? 'Workout logged \u2713' : 'Mark complete';
+  btn.className = 'complete-btn' + (state.logs[dk]?' secondary':'');
+  saveState();
+  renderDaySelector();
+  showToast(state.logs[dk] ? 'Workout logged!' : 'Unmarked');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+function renderHistory(){
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  const entries = Object.keys(state.logs).sort((a,b)=>b.localeCompare(a)).slice(0,30);
+  if(!entries.length){
+    list.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:2rem">No workouts logged yet</div>';
+    return;
+  }
+  entries.forEach(dk=>{
+    const d = new Date(dk+'T12:00:00');
+    const dayIdx = d.getDay()===0?6:d.getDay()-1;
+    const dayName = DAYS[dayIdx];
+    const sched = SCHEDULE[dayName];
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = '<div>'
+      + '<div class="history-name">'+sched.label+'</div>'
+      + '<div class="history-date">'+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'</div>'
+      + '</div>'
+      + '<span class="history-badge '+(state.logs[dk]?'badge-done':'badge-skip')+'">'+(state.logs[dk]?'Done':'&mdash;')+'</span>';
+    list.appendChild(row);
+  });
+}
+
+renderPinDots();
+if(!getPin()){
+  document.getElementById('pin-setup-note').textContent = 'First time? Set a 4-digit PIN to get started.';
+}
+</script>
+</body>
+</html>
